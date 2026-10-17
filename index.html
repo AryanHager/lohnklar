@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Lohnklar – Brutto-Netto-Rechner 2026</title>
+  <meta name="description" content="Brutto-Netto-Rechner 2026 nach offiziellem Programmablaufplan des BMF. Funktioniert offline, alle Daten bleiben auf dem Gerät.">
+  <meta name="theme-color" content="#1e3a5f">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Lohnklar">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="kopf">
+    <img src="icons/icon.svg" alt="" class="logo" width="40" height="40">
+    <div>
+      <h1>Lohnklar</h1>
+      <p class="unterzeile">Brutto-Netto-Rechner 2026</p>
+    </div>
+    <button id="btnInstall" class="btn-klein" hidden>App installieren</button>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="rechner" class="aktiv">Rechner</button>
+    <button role="tab" data-tab="vergleich">Vergleich</button>
+    <button role="tab" data-tab="profile">Profile</button>
+  </nav>
+
+  <main>
+    <!-- ================= RECHNER ================= -->
+    <section id="tab-rechner" class="tab aktiv">
+      <form id="form" autocomplete="off" onsubmit="return false">
+        <div class="karte eingabe-haupt">
+          <div class="segment" id="modus">
+            <button type="button" data-wert="b2n" class="aktiv">Brutto → Netto</button>
+            <button type="button" data-wert="n2b">Wunschnetto</button>
+          </div>
+          <label class="betrag">
+            <span id="lblBetrag">Bruttogehalt</span>
+            <div class="betrag-feld"><input id="betrag" name="betrag" type="text" inputmode="decimal" value="4.000"><span>€</span></div>
+          </label>
+          <div class="segment klein" id="zeitraum">
+            <button type="button" data-wert="monat" class="aktiv">pro Monat</button>
+            <button type="button" data-wert="jahr">pro Jahr</button>
+          </div>
+        </div>
+
+        <details class="karte" open>
+          <summary>Persönliche Angaben</summary>
+          <div class="raster">
+            <label>Steuerklasse
+              <select name="steuerklasse">
+                <option value="1">I – ledig</option><option value="2">II – alleinerziehend</option>
+                <option value="3">III – verheiratet</option><option value="4">IV – verheiratet</option>
+                <option value="5">V – verheiratet</option><option value="6">VI – Zweitjob</option>
+              </select>
+            </label>
+            <label id="feldFaktor" hidden>Faktor (IV mit Faktor)
+              <input name="faktor" type="text" inputmode="decimal" placeholder="z. B. 0,912">
+            </label>
+            <label>Bundesland
+              <select name="bundesland" id="bundesland"></select>
+            </label>
+            <label>Geburtsjahr
+              <input name="geburtsjahr" type="number" min="1930" max="2012" value="1990">
+            </label>
+            <label class="schalter"><input type="checkbox" name="kirche"> <span>Kirchensteuerpflichtig <small id="kistSatz">(9 %)</small></span></label>
+            <label>Kinder (gesamt)
+              <input name="kinder" type="number" min="0" max="15" value="0">
+            </label>
+            <label>davon unter 25 Jahre
+              <input name="kinderU25" type="number" min="0" max="15" value="0">
+            </label>
+            <label>Kinderfreibeträge
+              <select name="kinderfreibetraege">
+                <option value="0">0</option><option value="0.5">0,5</option><option value="1">1</option><option value="1.5">1,5</option>
+                <option value="2">2</option><option value="2.5">2,5</option><option value="3">3</option><option value="3.5">3,5</option>
+                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+              </select>
+            </label>
+            <label>Steuerfreibetrag / Monat
+              <input name="freibetrag" type="text" inputmode="decimal" placeholder="0">
+            </label>
+          </div>
+        </details>
+
+        <details class="karte">
+          <summary>Kranken- &amp; Sozialversicherung</summary>
+          <div class="segment klein" id="kvArt">
+            <button type="button" data-wert="gkv" class="aktiv">Gesetzlich (GKV)</button>
+            <button type="button" data-wert="pkv">Privat (PKV)</button>
+          </div>
+          <div id="gkvFelder" class="raster">
+            <label class="breit">Krankenkasse
+              <select name="kasse" id="kasse"></select>
+            </label>
+            <label>Zusatzbeitrag in %
+              <input name="kvZusatz" type="text" inputmode="decimal" value="2,90">
+            </label>
+          </div>
+          <div id="pkvFelder" class="raster" hidden>
+            <label>PKV-Beitrag Kranken / Monat
+              <input name="pkvKV" type="text" inputmode="decimal" placeholder="z. B. 550">
+            </label>
+            <label>PKV-Beitrag Pflege / Monat
+              <input name="pkvPV" type="text" inputmode="decimal" placeholder="z. B. 60">
+            </label>
+            <p class="hinweis breit">Der Arbeitgeberzuschuss (max. 508,59 € KV + 104,63 € PV) wird automatisch berücksichtigt.</p>
+          </div>
+          <div class="raster">
+            <label class="schalter"><input type="checkbox" name="rvPflicht" checked> <span>Rentenversicherungspflichtig</span></label>
+            <label class="schalter"><input type="checkbox" name="avPflicht" checked> <span>Arbeitslosenversicherungspflichtig</span></label>
+            <label class="schalter breit"><input type="checkbox" name="minijobRvBefreit"> <span>Minijob: von RV-Pflicht befreit</span></label>
+          </div>
+        </details>
+
+        <details class="karte">
+          <summary>Dienstwagen &amp; Dienstrad</summary>
+          <label class="schalter"><input type="checkbox" name="fw"> <span>Firmenwagen (auch privat genutzt)</span></label>
+          <div class="raster" id="fwFelder" hidden>
+            <label>Bruttolistenpreis
+              <input name="fwListenpreis" type="text" inputmode="decimal" placeholder="z. B. 45.000">
+            </label>
+            <label>Entfernung Wohnung – Arbeit (km)
+              <input name="fwKm" type="number" min="0" value="0">
+            </label>
+            <label>Antrieb
+              <select name="fwAntrieb">
+                <option value="verbrenner">Verbrenner (1 %)</option>
+                <option value="hybrid">Plug-in-Hybrid (0,5 %)</option>
+                <option value="elektro">Elektro (0,25 %)</option>
+              </select>
+            </label>
+            <label>Zuzahlung Arbeitnehmer / Monat
+              <input name="fwZuzahlung" type="text" inputmode="decimal" placeholder="0">
+            </label>
+            <p class="hinweis breit" id="fwInfo"></p>
+          </div>
+          <label class="schalter"><input type="checkbox" name="rad"> <span>Firmenrad / Dienstrad</span></label>
+          <div class="raster" id="radFelder" hidden>
+            <label>Unverbindliche Preisempfehlung
+              <input name="radListenpreis" type="text" inputmode="decimal" placeholder="z. B. 3.500">
+            </label>
+            <label>Überlassung
+              <select name="radModus">
+                <option value="zusaetzlich">zusätzlich zum Gehalt (steuerfrei)</option>
+                <option value="umwandlung">per Gehaltsumwandlung (0,25 %)</option>
+              </select>
+            </label>
+            <label id="feldRadLeasing">Leasingrate (Umwandlung) / Monat
+              <input name="radLeasing" type="text" inputmode="decimal" placeholder="z. B. 90">
+            </label>
+          </div>
+        </details>
+
+        <details class="karte">
+          <summary>Zusatzleistungen &amp; Vorsorge</summary>
+          <div class="raster">
+            <label>Betriebsrente (bAV) – Eigenanteil / Monat
+              <input name="bavAN" type="text" inputmode="decimal" placeholder="0">
+            </label>
+            <label>bAV – Arbeitgeberzuschuss / Monat
+              <input name="bavAG" type="text" inputmode="decimal" placeholder="0">
+            </label>
+            <label>VWL – Arbeitgeberanteil / Monat
+              <input name="vwlAG" type="text" inputmode="decimal" placeholder="0">
+            </label>
+            <label>VWL – Sparrate gesamt / Monat
+              <input name="vwlSpar" type="text" inputmode="decimal" placeholder="0">
+            </label>
+            <label>Sonstiger geldwerter Vorteil / Monat
+              <input name="gwv" type="text" inputmode="decimal" placeholder="0">
+            </label>
+            <label>Steuerfreie Bezüge / Monat
+              <input name="steuerfrei" type="text" inputmode="decimal" placeholder="z. B. Sachbezug 50">
+            </label>
+          </div>
+        </details>
+
+        <details class="karte">
+          <summary>Einmalzahlungen</summary>
+          <div class="raster">
+            <label>Weihnachtsgeld / 13. Gehalt (pro Jahr)
+              <input name="ezWeihnacht" type="text" inputmode="decimal" placeholder="0">
+            </label>
+            <label>Urlaubsgeld / Bonus (pro Jahr)
+              <input name="ezBonus" type="text" inputmode="decimal" placeholder="0">
+            </label>
+            <p class="hinweis breit">Einmalzahlungen werden als sonstige Bezüge nach § 39b Abs. 3 EStG (Jahreslohnsteuer-Differenz) versteuert.</p>
+          </div>
+        </details>
+      </form>
+
+      <!-- ===== ERGEBNIS ===== -->
+      <div class="karte ergebnis" id="ergebnis" aria-live="polite">
+        <div class="ergebnis-kopf">
+          <div>
+            <p class="label" id="lblErgebnis">Auszahlung pro Monat</p>
+            <p class="gross" id="hauptwert">–</p>
+            <p class="neben" id="nebenwert"></p>
+          </div>
+          <span class="badge" id="artBadge"></span>
+        </div>
+        <div class="balken" id="balken" aria-hidden="true"></div>
+        <ul class="legende" id="legende"></ul>
+        <table class="aufstellung" id="aufstellung">
+          <thead><tr><th></th><th>Monat</th><th>Jahr</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div id="einmalBox"></div>
+        <div class="aktionen">
+          <button type="button" class="btn" id="btnSpeichern">Als Profil speichern</button>
+          <button type="button" class="btn sekundaer" id="btnA">Als Szenario A</button>
+          <button type="button" class="btn sekundaer" id="btnB">Als Szenario B</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= VERGLEICH ================= -->
+    <section id="tab-vergleich" class="tab">
+      <div class="karte">
+        <h2>Szenarien vergleichen</h2>
+        <p class="hinweis">Übernimm im Rechner zwei Szenarien („Als Szenario A/B“) oder wähle gespeicherte Profile.</p>
+        <div class="raster">
+          <label>Szenario A <select id="wahlA"></select></label>
+          <label>Szenario B <select id="wahlB"></select></label>
+        </div>
+        <div class="segment klein" id="vglZeitraum">
+          <button type="button" data-wert="monat" class="aktiv">Monat</button>
+          <button type="button" data-wert="jahr">Jahr</button>
+        </div>
+        <table class="aufstellung vergleich" id="vergleichTabelle"></table>
+      </div>
+    </section>
+
+    <!-- ================= PROFILE ================= -->
+    <section id="tab-profile" class="tab">
+      <div class="karte">
+        <h2>Gespeicherte Profile</h2>
+        <p class="hinweis">Profile werden ausschließlich lokal auf diesem Gerät gespeichert.</p>
+        <ul class="profilliste" id="profilliste"></ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="fuss">
+    <p><strong>Alle Berechnungen ohne Gewähr.</strong></p>
+    <p>Lohnsteuer nach dem amtlichen Programmablaufplan 2026 des BMF · Sozialversicherungswerte 2026 · Keine Datenübertragung – alles bleibt auf deinem Gerät.</p>
+    <p id="offlineStatus"></p>
+  </footer>
+
+  <dialog id="dlgSpeichern">
+    <form method="dialog">
+      <h3>Profil speichern</h3>
+      <label>Name<input id="profilName" required maxlength="40" placeholder="z. B. Aktueller Job"></label>
+      <menu><button value="abbrechen" class="btn sekundaer">Abbrechen</button><button value="ok" class="btn">Speichern</button></menu>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="js/decimal.js"></script>
+  <script src="js/lohnsteuer2026.js"></script>
+  <script src="js/rechner.js"></script>
+  <script src="js/krankenkassen.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

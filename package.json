@@ -1,0 +1,10 @@
+{
+  "name": "lohnklar",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lohnklar – Brutto-Netto-Rechner 2026 (PWA)",
+  "scripts": {
+    "test": "node tests/lohnsteuer.test.js && node tests/netto.test.js",
+    "start": "python3 -m http.server 8765"
+  }
+}
