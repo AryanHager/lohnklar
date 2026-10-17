@@ -80,32 +80,45 @@
   }
   function pvAbschlaege(p) { return Math.max(0, Math.min(p.kinderU25 || 0, 5) - 1); }
 
-  /** Sozialversicherung für einen Monat (regulär, laufend) */
-  function sozialMonat(p, svBrutto, alter) {
+  /**
+   * Sozialversicherung für einen Monat (regulär, laufend).
+   * teil (optional, nur Teilmonat bei Ein-/Austritt): { svTage, regelSvBrutto }
+   *  - Einordnung Minijob/Übergangsbereich nach dem regelmäßigen Monatsentgelt (Rundschreiben Übergangsbereich Ziff. 4.3.2.5)
+   *  - Teil-BBG = Jahres-BBG / 360 × SV-Tage, kaufmännisch auf 2 Stellen (§ 23a SGB IV i. V. m. BVV, § 223 SGB V)
+   *  - Übergangsbereich: AE hochrechnen (× 30 / SV-Tage), Formel anwenden, BE × SV-Tage / 30
+   *  - Minijob: anteilige Mindestbeitragsbemessungsgrundlage 175 € × SV-Tage / 30 (§ 163 Abs. 8 SGB VI)
+   */
+  function sozialMonat(p, svBrutto, alter, teil) {
+    const T = teil ? teil.svTage : 30, klasse = teil ? teil.regelSvBrutto : svBrutto;
     const res = { kv: 0, pv: 0, rv: 0, av: 0, agKv: 0, agPv: 0, agRv: 0, agAv: 0, pkvBeitrag: 0, pkvZuschuss: 0, art: 'regulär' };
     const sachsen = p.bundesland === 'SN';
     const pvAG = sachsen ? W.PV_AG_SN : W.PV - W.PV_AN;
     const kvAN = W.KV_ALLG / 2 + p.kvZusatz / 2;
     const pvAN = pvSatzAN(p, alter);
     if (svBrutto <= 0) return res;
-    if (svBrutto <= W.MINI) {
+    if (klasse <= W.MINI) {
       res.art = 'Minijob';
       if (p.rvPflicht && !p.minijobRvBefreit) {
-        res.rv = r2(Math.max(svBrutto, W.MINI_MIN_BMG) * W.RV / 100 - r2(svBrutto * W.MINI_RV_AG / 100));
+        const minBmg = teil ? r2(W.MINI_MIN_BMG * T / 30) : W.MINI_MIN_BMG;
+        res.rv = r2(Math.max(svBrutto, minBmg) * W.RV / 100 - r2(svBrutto * W.MINI_RV_AG / 100));
         res.agRv = r2(svBrutto * W.MINI_RV_AG / 100);
       } else res.agRv = r2(svBrutto * W.MINI_RV_AG / 100);
       if (p.kv === 'gkv') res.agKv = r2(svBrutto * 0.13);
       return res;
     }
     let beG = svBrutto, beAN = svBrutto;
-    if (svBrutto <= W.MIDI_OBEN) {
+    if (klasse <= W.MIDI_OBEN) {
       res.art = 'Midijob (Übergangsbereich)';
       const F = W.FAKTOR_F, G = W.MINI, O = W.MIDI_OBEN;
-      beG = F * G + (O / (O - G) - G / (O - G) * F) * (svBrutto - G);
-      beAN = O / (O - G) * (svBrutto - G);
+      const ae = teil ? svBrutto * 30 / T : svBrutto;
+      beG = ae <= G ? ae * F : F * G + (O / (O - G) - G / (O - G) * F) * (ae - G);
+      beAN = Math.max(0, O / (O - G) * (ae - G));
+      if (teil) { beG = r2(beG * T / 30); beAN = r2(beAN * T / 30); }
     }
-    const kvB = Math.min(beAN, W.BBG_KV_M), rvB = Math.min(beAN, W.BBG_RV_M);
-    const kvG = Math.min(beG, W.BBG_KV_M), rvG = Math.min(beG, W.BBG_RV_M);
+    const bbgKV = teil ? r2(W.BBG_KV_J / 360 * T) : W.BBG_KV_M, bbgRV = teil ? r2(W.BBG_RV_J / 360 * T) : W.BBG_RV_M;
+    res.bbgKV = bbgKV; res.bbgRV = bbgRV;
+    const kvB = Math.min(beAN, bbgKV), rvB = Math.min(beAN, bbgRV);
+    const kvG = Math.min(beG, bbgKV), rvG = Math.min(beG, bbgRV);
     const regulaer = res.art === 'regulär';
     const pvBasisAN = sachsen ? W.PV_AN_SN : W.PV_AN; // ohne Zuschlag/Abschläge (tragen nur AN)
     if (p.kv === 'gkv') {
@@ -115,11 +128,13 @@
       res.agKv = regulaer ? r2(kvG * kvAN / 100) : r2(kvG * (W.KV_ALLG + p.kvZusatz) / 100 - kvB * kvAN / 100);
       res.agPv = regulaer ? r2(kvG * pvAG / 100) : Math.max(0, r2(kvG * W.PV / 100 - kvB * pvBasisAN / 100));
     } else {
-      const z = pkvZuschuss(p), zKV = z.kv, zPV = z.pv;
-      res.pkvBeitrag = r2((p.pkvKV || 0) + (p.pkvPV || 0));
+      const z = pkvZuschuss(p), q = teil ? T / 30 : 1; // Teilmonat: Beitrag und Zuschuss tageweise (× SV-Tage / 30)
+      const zKV = teil ? r2(z.kv * q) : z.kv, zPV = teil ? r2(z.pv * q) : z.pv;
+      const bKV = teil ? r2((p.pkvKV || 0) * q) : (p.pkvKV || 0), bPV = teil ? r2((p.pkvPV || 0) * q) : (p.pkvPV || 0);
+      res.pkvBeitrag = r2(bKV + bPV);
       res.pkvZuschuss = r2(zKV + zPV);
-      res.kv = r2((p.pkvKV || 0) - zKV);
-      res.pv = r2((p.pkvPV || 0) - zPV);
+      res.kv = r2(bKV - zKV);
+      res.pv = r2(bPV - zPV);
       res.agKv = r2(zKV); res.agPv = r2(zPV);
     }
     if (p.rvPflicht) { res.rv = r2(rvB * W.RV / 200); res.agRv = regulaer ? res.rv : r2(rvG * W.RV / 100 - rvB * W.RV / 200); }
@@ -176,12 +191,24 @@
     const steuerBrutto = Math.max(0, r2(basis + bavStPfl));
     const svBrutto = Math.max(0, r2(basis + bavSvPfl));
 
-    const sv = sozialMonat(p, svBrutto, alter);
+    const teil = p._teil || null; // { svTage, steuerTage, regelSvBrutto } – nur Teilmonat (Entgeltabrechnung)
+    const sv = sozialMonat(p, svBrutto, alter, teil);
     const minijob = sv.art === 'Minijob';
 
     // Lohnsteuer laufender Monat
     let lst = 0, soli = 0, bk = 0, kist = 0, lstEin = null;
-    if (!minijob) {
+    let steuerTage = null;
+    if (!minijob && teil && teil.steuerTage) {
+      // Teillohnzahlungszeitraum (§ 39b Abs. 2 EStG, R 39b.5 Abs. 2 LStR): Arbeitslohn auf Kalendertage umrechnen,
+      // Lohnsteuer/Soli/KiSt nach Tagestabelle (PAP LZZ = 4) und mit der Zahl der Kalendertage vervielfachen.
+      steuerTage = teil.steuerTage;
+      lstEin = lstEingaben(p, steuerBrutto / steuerTage, alter);
+      lstEin.LZZ = 4;
+      lstEin.LZZFREIB = Math.ceil(cent(p.freibetrag || 0) / 30); // Tagesfreibetrag aus Monatsfreibetrag (aufgerundet)
+      const o = LSt(lstEin);
+      lst = r2(o.LSTLZZ / 100 * steuerTage); soli = r2(o.SOLZLZZ / 100 * steuerTage); bk = o.BK / 100;
+      kist = p.kirche ? r2(floor2(bk * bl.kist / 100) * steuerTage) : 0;
+    } else if (!minijob) {
       lstEin = lstEingaben(p, steuerBrutto, alter);
       const o = LSt(lstEin);
       lst = o.LSTLZZ / 100; soli = o.SOLZLZZ / 100; bk = o.BK / 100;
@@ -218,6 +245,7 @@
       steuern: steuerSumme, sozial: svSumme, netto, auszahlung,
       agKv: sv.agKv, agPv: sv.agPv, agRv: sv.agRv, agAv: sv.agAv
     };
+    if (teil) Object.assign(monat, { svTage: teil.svTage, steuerTage, bbgKV: sv.bbgKV, bbgRV: sv.bbgRV });
     // Arbeitgeberkosten (ohne geldwerte Vorteile, ohne Umlagen U1/U2/U3, BG); Minijob inkl. 2 % Pauschsteuer
     monat.agKosten = r2(p.brutto + (p.vwlAG || 0) + (p.bavAG || 0) + (p.steuerfrei || 0) + sv.agKv + sv.agPv + sv.agRv + sv.agAv + (minijob ? r2(svBrutto * 0.02) : 0));
     const jahr = {};

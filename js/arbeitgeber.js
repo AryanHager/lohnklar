@@ -88,6 +88,7 @@
   }
 
   // ---------- Mitarbeiterliste ----------
+  const deDatum = (iso) => iso ? String(iso).split('-').reverse().join('.') : '';
   function zeigeListe() {
     const ul = $('#maliste');
     if (!mitarbeiter.length) { ul.innerHTML = '<li class="leer">Noch keine Mitarbeiter angelegt. Tippe auf „+ Mitarbeiter“.</li>'; return; }
@@ -96,7 +97,7 @@
       try { const r = R.berechne(Object.assign(E.eingabeAus(A.werteFuer(m)), { einmalzahlung: 0 })); info = `Brutto ${eur(r.monat.brutto)} · Auszahlung ${eur(r.monat.auszahlung)}`; } catch (e) { }
       const ini = ((m.vorname || ' ')[0] + (m.name || ' ')[0]).toUpperCase();
       return `<li data-id="${esc(m.id)}"><div class="ma-kopf"><span class="avatar">${esc(ini)}</span><div class="ma-info"><strong>${esc(m.name)}, ${esc(m.vorname)}</strong>
-        <small>${m.personalnummer ? 'Pers.-Nr. ' + esc(m.personalnummer) + ' · ' : ''}StKl ${['', 'I', 'II', 'III', 'IV', 'V', 'VI'][Number(m.werte.steuerklasse) || 1]} · ${esc(E.kassenName(m.werte))}</small><small>${info}</small></div></div>
+        <small>${m.personalnummer ? 'Pers.-Nr. ' + esc(m.personalnummer) + ' · ' : ''}StKl ${['', 'I', 'II', 'III', 'IV', 'V', 'VI'][Number(m.werte.steuerklasse) || 1]} · ${esc(E.kassenName(m.werte))}</small><small>${info}</small>${m.austritt ? `<small class="ma-austritt">Austritt ${esc(deDatum(m.austritt))}</small>` : ''}</div></div>
         <div class="ma-aktionen"><button class="btn" data-aktion="abrechnung">Abrechnung</button><button class="btn sekundaer" data-aktion="bearbeiten">Bearbeiten</button><button class="btn gefahr" data-aktion="loeschen" aria-label="Löschen">Löschen</button></div></li>`;
     }).join('');
   }
@@ -123,7 +124,8 @@
   const ABSCHNITTE = [
     { titel: 'Persönliche Daten', felder: [{ n: 'vorname', l: 'Vorname*', pflicht: 1 }, { n: 'name', l: 'Name*', pflicht: 1 }, { n: 'strasse', l: 'Straße und Hausnummer', breit: 1 }, { n: 'plz', l: 'PLZ', im: 'numeric' }, { n: 'ort', l: 'Ort' },
       { n: 'geburtsdatum', l: 'Geburtsdatum*', typ: 'date', pflicht: 1 }, { n: 'iban', l: 'IBAN', ph: 'DE.. .... .... .... .... ..', pruef: 'iban' }] },
-    { titel: 'Beschäftigung', felder: [{ n: 'personalnummer', l: 'Personalnummer' }, { n: 'eintritt', l: 'Eintrittsdatum', typ: 'date' },
+    { titel: 'Beschäftigung', felder: [{ n: 'personalnummer', l: 'Personalnummer', breit: 1 }, { n: 'eintritt', l: 'Eintrittsdatum', typ: 'date' }, { n: 'austritt', l: 'Austrittsdatum (optional)', typ: 'date', pruef: 'austritt' },
+      { n: 'teilmonatMethode', l: 'Teilmonat (Ein-/Austritt im Monat): Gehalt anteilig nach', typ: 'select', breit: 1, opts: [['30tage', '30-Tage-Methode: Gehalt / 30 × Kalendertage (Standard)'], ['kalendertage', 'Kalendertagen des Monats'], ['arbeitstage', 'Arbeitstagen Mo–Fr des Monats (ohne Feiertage)']] },
       { n: 'w.betrag', l: 'Bruttogehalt / Monat*', im: 'decimal', pflicht: 1 }, { n: 'pgs', l: 'Personengruppenschlüssel', ph: '101', im: 'numeric', pruef: 'pgs' },
       { n: 'bgs', l: 'Beitragsgruppenschlüssel', ph: '1111', im: 'numeric', pruef: 'bgs', knopf: 'Vorschlag' }] },
     { titel: 'Steuermerkmale', felder: [{ n: 'steuerid', l: 'Steuer-ID', im: 'numeric', ph: '11 Ziffern', pruef: 'steuerid' },
@@ -140,8 +142,9 @@
     { titel: 'Dienstwagen & Dienstrad', felder: [ja('w.fw', 'Firmenwagen', 1), { n: 'w.fwListenpreis', l: 'Bruttolistenpreis', im: 'decimal', nur: 'fw' }, { n: 'w.fwKm', l: 'Entfernung (km)', typ: 'number', nur: 'fw' },
       { n: 'w.fwAntrieb', l: 'Antrieb', typ: 'select', opts: [['verbrenner', 'Verbrenner (1 %)'], ['hybrid', 'Plug-in-Hybrid (0,5 %)'], ['elektro', 'Elektro (0,25 %)']], nur: 'fw' }, { n: 'w.fwZuzahlung', l: 'Zuzahlung AN / Monat', im: 'decimal', nur: 'fw' },
       ja('w.rad', 'Firmenrad', 1), { n: 'w.radListenpreis', l: 'UVP Fahrrad', im: 'decimal', nur: 'rad' }, { n: 'w.radModus', l: 'Überlassung', typ: 'select', opts: [['zusaetzlich', 'zusätzlich (steuerfrei)'], ['umwandlung', 'Gehaltsumwandlung (0,25 %)']], nur: 'rad' },
-      { n: 'w.radLeasing', l: 'Leasingrate / Monat', im: 'decimal', nur: 'radumw' }] },
-    { titel: 'Vorsorge & Zusatzleistungen', felder: [{ n: 'w.bavAN', l: 'bAV Entgeltumwandlung / Monat', im: 'decimal' }, { n: 'w.bavAG', l: 'bAV AG-Zuschuss / Monat', im: 'decimal' },
+      { n: 'w.radLeasing', l: 'Leasingrate / Monat', im: 'decimal', nur: 'radumw' }],
+      hinweis: 'Bei Ein- oder Austritt im Laufe des Monats wird der geldwerte Vorteil für Firmenwagen und Firmenrad nicht gekürzt: Der Monatswert gilt, sobald das Fahrzeug an mindestens einem Tag im Monat zur Verfügung stand (R 8.1 Abs. 9 Nr. 1 Satz 4 LStR).' },
+    { titel: 'Vorsorge & Zusatzleistungen', hinweis: 'Im Teilmonat werden Gehalt, VWL-AG-Anteil und bAV anteilig berechnet; Sachbezüge, steuerfreie Bezüge und die VWL-Sparrate bleiben ungekürzt.', felder: [{ n: 'w.bavAN', l: 'bAV Entgeltumwandlung / Monat', im: 'decimal' }, { n: 'w.bavAG', l: 'bAV AG-Zuschuss / Monat', im: 'decimal' },
       { n: 'w.vwlAG', l: 'VWL AG-Anteil / Monat', im: 'decimal' }, { n: 'w.vwlSpar', l: 'VWL Sparrate / Monat', im: 'decimal' },
       { n: 'w.gwv', l: 'Sonstiger geldwerter Vorteil / Monat', im: 'decimal' }, { n: 'w.steuerfrei', l: 'Steuerfreie Bezüge / Monat', im: 'decimal' }] }
   ];
@@ -156,10 +159,10 @@
     if (f.knopf) input = `<div class="mitknopf">${input}<button type="button" class="btn sekundaer" data-vorschlag="${f.n}">${esc(f.knopf)}</button></div>`;
     return `<label class="${cls}">${esc(f.l)}${input}<small class="feldfehler"></small></label>`;
   }
-  $('#maForm').innerHTML = ABSCHNITTE.map(a => `<div class="karte"><h3>${esc(a.titel)}</h3><div class="raster">${a.felder.map(feldHtml).join('')}</div></div>`).join('') +
+  $('#maForm').innerHTML = ABSCHNITTE.map(a => `<div class="karte"><h3>${esc(a.titel)}</h3><div class="raster">${a.felder.map(feldHtml).join('')}</div>${a.hinweis ? `<p class="hinweis">${esc(a.hinweis)}</p>` : ''}</div>`).join('') +
     '<p class="hinweis">* Pflichtfeld. Prüfziffern von Steuer-ID, SV-Nummer und IBAN werden lokal geprüft. Alle Daten bleiben auf diesem Gerät.</p><button type="button" class="btn breit" id="maSpeichern2">Mitarbeiter speichern</button>';
   const alleFelder = ABSCHNITTE.flatMap(a => a.felder);
-  const STANDARD = { 'w.steuerklasse': '1', 'w.kinderfreibetraege': '0', konfession: '', 'w.bundesland': 'NW', 'w._kvArt': 'gkv', 'w.kasse': 'avg', 'w.kinder': '0', 'w.kinderU25': '0', 'w.rvPflicht': true, 'w.avPflicht': true, 'w.fwAntrieb': 'verbrenner', 'w.radModus': 'zusaetzlich', pgs: '101' };
+  const STANDARD = { 'w.steuerklasse': '1', 'w.kinderfreibetraege': '0', konfession: '', 'w.bundesland': 'NW', 'w._kvArt': 'gkv', 'w.kasse': 'avg', 'w.kinder': '0', 'w.kinderU25': '0', 'w.rvPflicht': true, 'w.avPflicht': true, 'w.fwAntrieb': 'verbrenner', 'w.radModus': 'zusaetzlich', pgs: '101', teilmonatMethode: '30tage' };
   let aktuell = null;
   function wert(m, n) { if (n.startsWith('w.')) return (m.werte || {})[n.slice(2)]; return m[n]; }
   function oeffneEditor(m) {
@@ -194,11 +197,12 @@
     else if (n === 'iban') res = V.pruefeIban(v);
     else if (n === 'bgs') res = V.pruefeBeitragsgruppe(v);
     else if (n === 'pgs') res = V.pruefePersonengruppe(v);
+    else if (n === 'austritt') res = V.pruefeAustritt(f.eintritt.value, v);
     feldStatus(el, res, res.hinweise || (res.bezeichnung ? [res.bezeichnung] : []));
     if (n === 'pgs' && res.ok) { const box = el.closest('label').querySelector('.feldfehler'); box.textContent = res.bezeichnung; box.className = 'feldfehler hinweis'; }
     return res;
   }
-  $('#maForm').addEventListener('change', (e) => { sichtbarkeit(); const f = alleFelder.find(x => x.n === e.target.name); if (f && f.pruef) pruefeFeld(f.n); if (e.target.name === 'geburtsdatum' || e.target.name === 'name') pruefeFeld('svnr'); });
+  $('#maForm').addEventListener('change', (e) => { sichtbarkeit(); const f = alleFelder.find(x => x.n === e.target.name); if (f && f.pruef) pruefeFeld(f.n); if (e.target.name === 'geburtsdatum' || e.target.name === 'name') pruefeFeld('svnr'); if (e.target.name === 'eintritt') pruefeFeld('austritt'); });
   $('#maForm').addEventListener('input', (e) => { if (e.target.classList.contains('ungueltig')) { const f = alleFelder.find(x => x.n === e.target.name); if (f && f.pruef) pruefeFeld(f.n); } });
   $('#maForm').addEventListener('click', (e) => {
     const b = e.target.closest('[data-vorschlag]'); if (!b) return;
@@ -245,6 +249,12 @@
     VORTRAG.map(([k, t]) => `<label>${t}<input data-vortrag="${k}" inputmode="decimal" placeholder="berechnet"></label>`).join('');
   function oeffneAbrechnung(m) {
     lzMa = JSON.parse(JSON.stringify(m)); lzMa.einmalzahlungen = lzMa.einmalzahlungen || [];
+    $('#lzMethode').value = '';
+    $('#lzMethode').options[0].textContent = `wie Stammdaten (${A.METHODEN[m.teilmonatMethode] || A.METHODEN['30tage']})`;
+    // Abrechnungsmonat in den Beschäftigungszeitraum legen
+    const b = A.beschaeftigung(m, Number($('#lzJahr').value), Number($('#lzMonat').value));
+    if (b.status === 'vor' && b.eintritt.j === Number($('#lzJahr').value)) $('#lzMonat').value = String(b.eintritt.m);
+    if (b.status === 'nach' && b.austritt.j === Number($('#lzJahr').value)) $('#lzMonat').value = String(b.austritt.m);
     $('#lzTitel').textContent = `Abrechnung ${m.vorname} ${m.name}`;
     $('#lzVortragAn').checked = false; $('#lzVortrag').hidden = true; $$('#lzVortrag input').forEach(i => i.value = '');
     oeffne('#lzAnsicht'); zeigeEinmal(); aktualisiereAbrechnung();
@@ -275,6 +285,7 @@
     const inputs = $$('#lzEinmal input[data-feld=betrag]'); if (inputs.length) inputs[inputs.length - 1].focus();
   });
   $('#lzMonat').addEventListener('change', () => { zeigeEinmal(); aktualisiereAbrechnung(); });
+  $('#lzMethode').addEventListener('change', aktualisiereAbrechnung);
   $('#lzVortragAn').addEventListener('change', () => { $('#lzVortrag').hidden = !$('#lzVortragAn').checked; aktualisiereAbrechnung(); });
   $('#lzVortrag').addEventListener('input', aktualisiereAbrechnung);
   function vortrag() {
@@ -285,9 +296,14 @@
   function aktualisiereAbrechnung() {
     $('#lzFehler').textContent = '';
     try {
-      lzAktuell = A.erstelleAbrechnung(firma || {}, lzMa, $('#lzJahr').value, $('#lzMonat').value, { vortrag: vortrag() });
+      lzAktuell = A.erstelleAbrechnung(firma || {}, lzMa, $('#lzJahr').value, $('#lzMonat').value, { vortrag: vortrag(), methode: $('#lzMethode').value || undefined });
       $('#lzVorschau').innerHTML = AUS.html(lzAktuell);
-    } catch (err) { lzAktuell = null; $('#lzVorschau').innerHTML = ''; $('#lzFehler').textContent = err.message; }
+      $('#lzTeilInfo').textContent = lzAktuell.teilmonat ? lzAktuell.teilmonat.text : 'Voller Monat beschäftigt – keine anteilige Berechnung.';
+    } catch (err) {
+      lzAktuell = null; $('#lzTeilInfo').textContent = '';
+      $('#lzVorschau').innerHTML = `<div class="karte lz-keine"><strong>Keine Abrechnung für diesen Monat</strong><p>${esc(err.message.replace(/^Keine Abrechnung: /, ''))}</p></div>`;
+    }
+    ['#lzDrucken', '#lzPdf', '#lzTeilen'].forEach(sel => { $(sel).disabled = !lzAktuell; });
   }
   function drucken(liste) {
     $('#druckbereich').innerHTML = liste.map(AUS.html).join('');
@@ -316,8 +332,14 @@
   function sammel() {
     if (!mitarbeiter.length) { toast('Keine Mitarbeiter vorhanden.'); return null; }
     const liste = [], fehler = [];
-    for (const m of mitarbeiter) { try { liste.push(A.erstelleAbrechnung(firma || {}, m, $('#sammelJahr').value, $('#sammelMonat').value)); } catch (e) { fehler.push(`${m.vorname} ${m.name}: ${e.message}`); } }
+    let nichtBeschaeftigt = 0;
+    for (const m of mitarbeiter) {
+      const b = A.beschaeftigung(m, Number($('#sammelJahr').value), Number($('#sammelMonat').value));
+      if (b.status === 'vor' || b.status === 'nach') { nichtBeschaeftigt++; continue; }
+      try { liste.push(A.erstelleAbrechnung(firma || {}, m, $('#sammelJahr').value, $('#sammelMonat').value)); } catch (e) { fehler.push(`${m.vorname} ${m.name}: ${e.message}`); }
+    }
     if (fehler.length) toast(`${fehler.length} übersprungen: ${fehler[0]}`);
+    else if (nichtBeschaeftigt) toast(`${nichtBeschaeftigt} Mitarbeiter in diesem Monat nicht beschäftigt – ohne Abrechnung.`);
     return liste.length ? liste : null;
   }
   $('#sammelPdf').addEventListener('click', () => { const l = sammel(); if (!l) return; herunterladen(pdfBlob(l), AUS.dateiname(l)); toast(`${l.length} Abrechnungen als PDF gespeichert`); });

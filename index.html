@@ -329,7 +329,9 @@
         <div class="raster">
           <label>Monat<select id="lzMonat"></select></label>
           <label>Jahr<select id="lzJahr"><option>2026</option></select></label>
+          <label class="breit">Teilmonat (Ein-/Austritt im Monat)<select id="lzMethode"><option value="">wie Stammdaten</option><option value="30tage">30-Tage-Methode</option><option value="kalendertage">Kalendertage des Monats</option><option value="arbeitstage">Arbeitstage (Mo–Fr) des Monats</option></select></label>
         </div>
+        <p class="hinweis" id="lzTeilInfo"></p>
         <h3>Einmalzahlungen in diesem Monat</h3>
         <div id="lzEinmal"></div>
         <div class="chips"><button type="button" data-ez="Weihnachtsgeld">+ Weihnachtsgeld</button><button type="button" data-ez="Urlaubsgeld">+ Urlaubsgeld</button><button type="button" data-ez="13. Monatsgehalt">+ 13. Gehalt</button><button type="button" data-ez="Prämie">+ Prämie</button></div>

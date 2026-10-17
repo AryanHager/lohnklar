@@ -103,7 +103,15 @@
     return (e.kvArt === 'pkv' ? '0' : '1') + (e.rvPflicht ? '1' : '0') + (e.avPflicht ? '1' : '0') + (e.kvArt === 'pkv' ? '0' : '1');
   }
 
-  const api = { pruefeSteuerId, pruefeSvNummer, pruefeIban, pruefeBetriebsnummer, pruefeBeitragsgruppe, pruefePersonengruppe, vorschlagBeitragsgruppe, PERSONENGRUPPEN };
+  /** Austrittsdatum (optional): gültiges Datum, nicht vor dem Eintrittsdatum */
+  function pruefeAustritt(eintritt, austritt) {
+    const re = /^\d{4}-\d{2}-\d{2}$/;
+    if (!austritt) return { ok: true, wert: '' };
+    if (!re.test(austritt) || isNaN(new Date(austritt + 'T00:00:00').getTime())) return { ok: false, fehler: 'Ungültiges Datum.' };
+    if (eintritt && re.test(eintritt) && austritt < eintritt) return { ok: false, fehler: 'Das Austrittsdatum darf nicht vor dem Eintrittsdatum liegen.' };
+    return { ok: true, wert: austritt };
+  }
+  const api = { pruefeAustritt, pruefeSteuerId, pruefeSvNummer, pruefeIban, pruefeBetriebsnummer, pruefeBeitragsgruppe, pruefePersonengruppe, vorschlagBeitragsgruppe, PERSONENGRUPPEN };
   root.Validierung = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

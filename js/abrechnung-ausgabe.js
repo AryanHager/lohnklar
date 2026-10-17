@@ -17,9 +17,11 @@
     svText.push(['RV / AV', `${e.rvPflicht ? 'pflichtig' : 'frei'} / ${e.avPflicht ? 'pflichtig' : 'frei'}`]);
     svText.push(['Beitragsgruppe', m.bgs || '–']); svText.push(['Personengruppe', m.pgs || '–']);
     if (a.art !== 'regulär') svText.push(['Beschäftigung', a.art]);
+    svText.push(['SV-Tage', a.teilmonat ? `${a.svTage} (Teil-BBG KV ${eurK(a.bbg.kv)} / RV ${eurK(a.bbg.rv)})` : '30']);
     const stText = [['Steuerklasse', STKL[st.steuerklasse] + (st.faktor ? ` mit Faktor ${String(st.faktor).replace('.', ',')}` : '')],
       ['Kinderfreibeträge', String(st.kinderfreibetraege).replace('.', ',')], ['Konfession', a.konfession + (e.kirche ? ` (KiSt ${a.kirchensteuersatz} %)` : '')],
-      ['Bundesland', st.bundesland || '–'], ['Freibetrag mtl.', st.freibetrag ? eur(st.freibetrag) : '–']];
+      ['Bundesland', st.bundesland || '–'], ['Freibetrag mtl.', st.freibetrag ? eur(st.freibetrag) : '–'],
+      ['Lohnzahlungszeitr.', a.teilmonat ? (a.art === 'Minijob' ? `Teilmonat (${a.teilmonat.kalendertage} Kalendertage)` : `Teilmonat, Tagestabelle × ${a.teilmonat.steuerTage}`) : 'Monat']];
     if (a.art === 'Minijob') stText.push(['Besteuerung', 'Pauschsteuer 2 % durch Arbeitgeber']);
 
     const bez = { titel: 'Bezüge', spalten: [['LA', 'l', 12], ['Bezeichnung', 'l', 108], ['St', 'c', 12], ['SV', 'c', 12], ['Betrag', 'r', 36]], zeilen: [] };
@@ -44,8 +46,9 @@
     const vonMonat = a.beschaeftigtSeit > 1 ? root.Abrechnung.MONATE[a.beschaeftigtSeit - 1] : 'Januar';
     const jahr = { titel: `Jahressummen ${a.jahr} (kumuliert ${vonMonat} – ${a.monatName}${a.vortragManuell ? ', Vormonate manuell' : ''})`, spalten: [['Wert', 'l', 62], ['Betrag', 'r', 28], ['Wert', 'l', 62], ['Betrag', 'r', 28]], zeilen: [] };
     const paare = [['Gesamtbrutto', j.gesamtBrutto], ['Lohnsteuer', j.lst], ['Steuer-Brutto', j.steuerBrutto], ['Solidaritätszuschlag', j.soli], ['SV-Brutto KV/PV', j.svKV], ['Kirchensteuer', j.kist],
-      ['SV-Brutto RV/AV', j.svRV], ['Krankenversicherung', j.kv], ['Nettoverdienst', j.netto], ['Pflegeversicherung', j.pv], ['Auszahlung', j.auszahlung], ['Rentenversicherung', j.rv], ['', null], ['Arbeitslosenversicherung', j.av]];
-    for (let i = 0; i < paare.length; i += 2) jahr.zeilen.push({ z: [paare[i][0], paare[i][1] === null ? '' : eur(paare[i][1]), paare[i + 1][0], eur(paare[i + 1][1])] });
+      ['SV-Brutto RV/AV', j.svRV], ['Krankenversicherung', j.kv], ['Nettoverdienst', j.netto], ['Pflegeversicherung', j.pv], ['Auszahlung', j.auszahlung], ['Rentenversicherung', j.rv], ['SV-Tage', String(j.svTage || 0)], ['Arbeitslosenversicherung', j.av]];
+    const fw = (v) => typeof v === 'string' ? v : eur(v);
+    for (let i = 0; i < paare.length; i += 2) jahr.zeilen.push({ z: [paare[i][0], fw(paare[i][1]), paare[i + 1][0], fw(paare[i + 1][1])] });
 
     const ag = a.arbeitgeber;
     const agText = `Arbeitgeberanteile (nachrichtlich): KV ${eur(ag.kv)} · PV ${eur(ag.pv)} · RV ${eur(ag.rv)} · AV ${eur(ag.av)}${ag.bavAG ? ` · bAV-Zuschuss ${eur(ag.bavAG)}` : ''}${a.pkv ? ` · PKV-Zuschuss enthalten` : ''}`;
@@ -53,13 +56,15 @@
       firma: { name: f.name || 'Arbeitgeber', zeilen: [f.strasse, [f.plz, f.ort].filter(Boolean).join(' ')].filter(Boolean), betriebsnummer: f.betriebsnummer, logo: f.logo },
       titel: `Entgeltabrechnung ${a.monatName} ${a.jahr}`, zeitraum: `Abrechnungszeitraum ${a.zeitraum}`,
       empfaenger: [`${m.vorname || ''} ${m.name || ''}`.trim(), m.strasse, [m.plz, m.ort].filter(Boolean).join(' ')].filter(Boolean),
-      stamm: [['Personalnummer', m.personalnummer || '–'], ['Geburtsdatum', datum(m.geburtsdatum)], ['Eintritt', datum(m.eintritt)], ['SV-Nummer', fmtSv(m.svnr)], ['Steuer-ID', fmtStId(m.steuerid)]],
+      stamm: [['Personalnummer', m.personalnummer || '–'], ['Geburtsdatum', datum(m.geburtsdatum)], ['Eintritt', datum(m.eintritt)]].concat(m.austritt ? [['Austritt', datum(m.austritt)]] : []).concat([['SV-Nummer', fmtSv(m.svnr)], ['Steuer-ID', fmtStId(m.steuerid)]]),
+      teil: a.teilmonat ? a.teilmonat.text : null,
       merkmale: [{ titel: 'Steuermerkmale', paare: stText }, { titel: 'SV-Merkmale', paare: svText }],
       tabellen: [bez, abz].concat(sonst.zeilen.length ? [sonst] : []),
       auszahlung: { betrag: eur(a.auszahlung), iban: m.iban ? fmtIban(m.iban) : 'nicht hinterlegt', inhaber: `${m.vorname || ''} ${m.name || ''}`.trim() },
       jahr, agText, fuss: FUSS, erstellt: new Date().toLocaleDateString('de-DE')
     };
   }
+  const eurK = (n) => fmtE.format(n || 0) + ' €';
   const fmtP = (x) => String(Math.round(x * 1000) / 1000).replace('.', ',');
   const fmtSv = (s) => s ? String(s).replace(/^(\d{2})(\d{6})([A-Z])(\d{2})(\d)$/i, '$1 $2 $3 $4 $5') : '–';
   const fmtStId = (s) => s ? String(s).replace(/^(\d{2})(\d{3})(\d{3})(\d{3})$/, '$1 $2 $3 $4') : '–';
@@ -77,6 +82,7 @@
       <div class="lz-anschrift"><div class="lz-adresse"><small>${esc(d.firma.name)} · ${d.firma.zeilen.map(esc).join(' · ')}</small><br>${d.empfaenger.map(esc).join('<br>')}</div>
       <dl class="lz-stamm">${d.stamm.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl></div>
       <h2 class="lz-titel">${esc(d.titel)}</h2><p class="lz-zeitraum">${esc(d.zeitraum)}</p>
+      ${d.teil ? `<p class="lz-teil">${esc(d.teil)}</p>` : ''}
       <div class="lz-merkmale">${d.merkmale.map(mk => `<section><h3>${esc(mk.titel)}</h3><dl>${mk.paare.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl></section>`).join('')}</div>
       ${d.tabellen.map(t => `<h3>${esc(t.titel)}</h3>${tab(t)}`).join('')}
       <div class="lz-auszahlung"><div><span>Auszahlungsbetrag</span><strong>${esc(d.auszahlung.betrag)}</strong></div><small>Überweisung an ${esc(d.auszahlung.inhaber)} · IBAN ${esc(d.auszahlung.iban)}</small></div>
@@ -111,11 +117,19 @@
     // Anschrift (Fensterposition DIN 5008 ca. 45 mm von oben) + Stammdaten
     y = 44; doc.setFontSize(6.5); doc.setTextColor(100); doc.text(`${d.firma.name} · ${d.firma.zeilen.join(' · ')}`, L, y); doc.setTextColor(0);
     doc.setFontSize(9.5); d.empfaenger.forEach((z, i) => doc.text(z, L, y + 5 + i * 4.6));
-    doc.setFontSize(8); d.stamm.forEach(([k, v], i) => { doc.setTextColor(90); doc.text(k, 125, y + i * 4.4); doc.setTextColor(0); doc.text(v, L + B, y + i * 4.4, { align: 'right' }); });
+    const zs = d.stamm.length > 5 ? 3.9 : 4.4;
+    doc.setFontSize(8); d.stamm.forEach(([k, v], i) => { doc.setTextColor(90); doc.text(k, 125, y - 1 + i * zs); doc.setTextColor(0); doc.text(v, L + B, y - 1 + i * zs, { align: 'right' }); });
     y = 69;
     doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(...NAVY); doc.text(d.titel, L, y);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(80); doc.text(d.zeitraum, L + B, y, { align: 'right' }); doc.setTextColor(0);
     y += 4;
+    if (d.teil) {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(7.2);
+      const zl = doc.splitTextToSize(d.teil, B - 4).slice(0, 2), hh = 2.2 + zl.length * 3.1;
+      doc.setFillColor(255, 243, 214); doc.roundedRect(L, y - 1, B, hh, 1, 1, 'F');
+      doc.setTextColor(120, 72, 0); zl.forEach((z, i) => doc.text(z, L + 2, y + 2.4 + i * 3.1)); doc.setTextColor(0);
+      y += hh + 1;
+    }
     // Merkmale (zwei Spalten)
     const mh = Math.max(...d.merkmale.map(mk => mk.paare.length)) * 3.5 + 7;
     d.merkmale.forEach((mk, i) => {

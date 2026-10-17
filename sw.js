@@ -1,5 +1,5 @@
 /* Service Worker: Cache-first, vollständige Offline-Nutzung. Keine externen Anfragen. */
-const CACHE = 'lohnklar-v5';
+const CACHE = 'lohnklar-v6';
 const DATEIEN = ['./', './index.html', './css/style.css', './js/decimal.js', './js/lohnsteuer2026.js', './js/rechner.js', './js/krankenkassen.js', './js/eingabe.js', './js/validierung.js', './js/abrechnung.js', './js/vendor/jspdf.umd.min.js',
   './js/abrechnung-ausgabe.js', './js/speicher.js', './js/app.js', './js/arbeitgeber.js',
   './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png'];
