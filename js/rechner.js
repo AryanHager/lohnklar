@@ -244,7 +244,7 @@
     return { brutto: b, ergebnis: berechne(Object.assign({}, eingabe, { brutto: b })) };
   }
 
-  const api = { berechne, bruttoAusNetto, BUNDESLAENDER, WERTE: W, DEFAULTS };
+  const api = { berechne, bruttoAusNetto, pvSatzAN, BUNDESLAENDER, WERTE: W, DEFAULTS };
   root.Rechner = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

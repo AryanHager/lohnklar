@@ -9,14 +9,7 @@
   const fmtZahl = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 });
   const eur = (n) => fmt.format(n || 0);
 
-  function zahl(v) {
-    if (v === undefined || v === null) return 0;
-    let s = String(v).trim().replace(/\s|€/g, '');
-    if (!s) return 0;
-    if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
-    else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
-    const n = parseFloat(s); return isFinite(n) ? n : 0;
-  }
+  const zahl = window.Eingabe.zahl, eingabeAus = window.Eingabe.eingabeAus;
   const lesen = (k) => localStorage.getItem(k) ? JSON.parse(localStorage.getItem(k)) : null;
   const schreiben = (k, v) => localStorage.setItem(k, JSON.stringify(v));
   function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('zeigen'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('zeigen'), 2200); }
@@ -65,25 +58,6 @@
     for (const el of form.elements) { if (!el.name || !(el.name in o) || el.name === 'betrag') continue; if (el.type === 'checkbox') el.checked = !!o[el.name]; else el.value = o[el.name]; }
   }
 
-  /** Formularwerte -> Rechner-Eingabe (Monatswerte) */
-  function eingabeAus(w) {
-    const div = w._zeitraum === 'jahr' ? 12 : 1;
-    const kasse = w.kasse;
-    let kvZusatz = R.WERTE.KV_ZUSATZ_DURCHSCHNITT;
-    if (kasse === 'eigen') kvZusatz = zahl(w.kvZusatz); else if (kasse !== 'avg' && KASSEN[kasse]) kvZusatz = KASSEN[kasse].zusatz;
-    return {
-      brutto: zahl(w.betrag) / div,
-      steuerklasse: Number(w.steuerklasse), faktor: zahl(w.faktor) || 1, bundesland: w.bundesland, kirche: !!w.kirche,
-      geburtsjahr: Number(w.geburtsjahr) || 1990, kinder: Number(w.kinder) || 0, kinderU25: Math.min(Number(w.kinderU25) || 0, Number(w.kinder) || 0),
-      kinderfreibetraege: zahl(w.kinderfreibetraege), freibetrag: zahl(w.freibetrag),
-      kv: w._kvArt, kvZusatz, pkvKV: zahl(w.pkvKV), pkvPV: zahl(w.pkvPV),
-      rvPflicht: !!w.rvPflicht, avPflicht: !!w.avPflicht, minijobRvBefreit: !!w.minijobRvBefreit,
-      fw: !!w.fw, fwListenpreis: zahl(w.fwListenpreis), fwKm: Number(w.fwKm) || 0, fwAntrieb: w.fwAntrieb, fwZuzahlung: zahl(w.fwZuzahlung),
-      rad: !!w.rad, radListenpreis: zahl(w.radListenpreis), radModus: w.radModus, radLeasing: zahl(w.radLeasing),
-      bavAN: zahl(w.bavAN), bavAG: zahl(w.bavAG), vwlAG: zahl(w.vwlAG), vwlSpar: zahl(w.vwlSpar), gwv: zahl(w.gwv), steuerfrei: zahl(w.steuerfrei),
-      einmalzahlung: zahl(w.ezWeihnacht) + zahl(w.ezBonus)
-    };
-  }
   /** Berechnung inkl. Wunschnetto-Modus */
   function rechne(w) {
     const e = eingabeAus(w);
@@ -237,7 +211,10 @@
 
   // ---------- PWA ----------
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-    navigator.serviceWorker.register('sw.js').then(() => { $('#offlineStatus').textContent = 'Offline verfügbar ✓'; }).catch(() => { });
+    const hatteController = !!navigator.serviceWorker.controller; let neuGeladen = false;
+    navigator.serviceWorker.register('sw.js').then((reg) => { $('#offlineStatus').textContent = 'Offline verfügbar ✓'; reg.update().catch(() => { }); }).catch(() => { });
+    // Neue Version: nach Aktivierung des neuen Service Workers einmal neu laden
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (!hatteController || neuGeladen) return; neuGeladen = true; if ([...document.querySelectorAll('.vollbild')].some(v => !v.hidden)) toast('Neue Version verfügbar – bitte die App neu laden.'); else location.reload(); });
   }
   let installEvent = null;
   window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvent = e; $('#btnInstall').hidden = false; });

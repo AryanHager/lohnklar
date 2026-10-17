@@ -12,7 +12,16 @@ Für die Installation aufs Handy muss die App über HTTPS (oder localhost) ausge
 - `tests/lohnsteuer.test.js`: 148 Fälle gegen die externe BMF-Testschnittstelle (bmf-steuerrechner.de, LSt2026ext),
   je 12 Ausgabewerte (LSTLZZ, SOLZLZZ, BK, STS, SOLZS, BKS, DBA-Werte) – centgenau.
 - `tests/netto.test.js`: komplette Netto-Rechnungen (SV von Hand nachgerechnet, LSt gegen BMF).
+- `tests/validierung.test.js`: Prüfroutinen; `tests/abrechnung.test.js`: Abrechnungswerte (gegen Rechner, BMF-PAP, Handrechnung) und PDF.
 - Referenzdaten neu abrufen: `node tests/fetch-bmf-referenz.js`, `fetch-bmf-zufall.js`, `fetch-bmf-netto.js`.
+
+## Arbeitgeberbereich (Profile → Arbeitgeber)
+- Firmendaten (Name, Adresse, Betriebsnummer, optionales Logo) und Mitarbeiterstammdaten inkl. aller Rechnereingaben
+- Prüfung von Steuer-ID (ISO 7064 MOD 11,10), SV-Nummer (Prüfziffer), IBAN (mod 97), BGS/PGS
+- Speicherung nur lokal in IndexedDB; JSON-Datensicherung (Export/Import)
+- Entgeltabrechnung je Monat mit Einmalzahlungen, Jahressummen, Drucken (A4), PDF (jsPDF, lokal in `js/vendor/`), Teilen (Web Share API)
+- Sammelabrechnung aller Mitarbeiter als ein PDF
+- Keine zertifizierte Entgeltabrechnungssoftware: keine DEÜV-Meldungen, kein ELStAM, keine Lohnsteuer-Anmeldung
 
 ## Aufbau
 - `js/decimal.js` – BigInt-Dezimalklasse (Ersatz für Java BigDecimal)

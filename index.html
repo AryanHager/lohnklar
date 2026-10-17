@@ -238,10 +238,65 @@
 
     <!-- ================= PROFILE ================= -->
     <section id="tab-profile" class="tab">
-      <div class="karte">
-        <h2>Gespeicherte Profile</h2>
-        <p class="hinweis">Profile werden ausschließlich lokal auf diesem Gerät gespeichert.</p>
-        <ul class="profilliste" id="profilliste"></ul>
+      <div class="segment" id="profilBereich">
+        <button type="button" data-wert="profile" class="aktiv">Meine Profile</button>
+        <button type="button" data-wert="arbeitgeber">Arbeitgeber</button>
+      </div>
+      <div id="bereich-profile">
+        <div class="karte">
+          <h2>Gespeicherte Profile</h2>
+          <p class="hinweis">Profile werden ausschließlich lokal auf diesem Gerät gespeichert.</p>
+          <ul class="profilliste" id="profilliste"></ul>
+        </div>
+      </div>
+      <div id="bereich-arbeitgeber" hidden>
+        <div class="karte datenschutz">
+          <h2>🔒 Datenschutz</h2>
+          <p>Firmen- und Mitarbeiterdaten werden <strong>nur auf diesem Gerät</strong> gespeichert (<span id="speicherArt">IndexedDB</span>) und niemals übertragen. Es gibt keinen Server und keine Cloud.</p>
+          <p class="hinweis">Wenn die Browserdaten gelöscht werden, sind auch diese Daten weg. Erstelle daher regelmäßig eine Datensicherung (unten). Die Sicherungsdatei enthält personenbezogene Daten – bitte sicher aufbewahren.</p>
+        </div>
+
+        <details class="karte" id="firmaKarte">
+          <summary>Firmendaten <span class="summary-info" id="firmaKurz"></span></summary>
+          <form id="firmaForm" class="raster" autocomplete="off" onsubmit="return false">
+            <label class="breit">Firmenname*<input name="name" required maxlength="80"></label>
+            <label class="breit">Straße und Hausnummer<input name="strasse" maxlength="80"></label>
+            <label>PLZ<input name="plz" inputmode="numeric" maxlength="10"></label>
+            <label>Ort<input name="ort" maxlength="60"></label>
+            <label>Betriebsnummer<input name="betriebsnummer" inputmode="numeric" maxlength="10" placeholder="8 Ziffern"><small class="feldfehler" data-fuer="betriebsnummer"></small></label>
+            <label>Logo (optional)<input type="file" id="logoDatei" accept="image/png,image/jpeg,image/svg+xml,image/webp"></label>
+            <div class="breit logozeile"><img id="logoVorschau" alt="" hidden><button type="button" class="btn sekundaer" id="logoEntfernen" hidden>Logo entfernen</button></div>
+            <button type="button" class="btn breit" id="firmaSpeichern">Firmendaten speichern</button>
+          </form>
+        </details>
+
+        <div class="karte">
+          <div class="kopfzeile"><h2>Mitarbeiter</h2><button type="button" class="btn" id="maNeu">+ Mitarbeiter</button></div>
+          <ul class="maliste" id="maliste"></ul>
+        </div>
+
+        <div class="karte">
+          <h2>Sammelabrechnung</h2>
+          <p class="hinweis">Erstellt die Entgeltabrechnungen aller Mitarbeiter für einen Monat als ein PDF (eine Seite je Mitarbeiter).</p>
+          <div class="raster">
+            <label>Monat<select id="sammelMonat"></select></label>
+            <label>Jahr<select id="sammelJahr"><option>2026</option></select></label>
+          </div>
+          <div class="aktionen">
+            <button type="button" class="btn" id="sammelPdf">PDF speichern</button>
+            <button type="button" class="btn sekundaer" id="sammelTeilen">Teilen</button>
+            <button type="button" class="btn sekundaer" id="sammelDruck">Drucken</button>
+          </div>
+        </div>
+
+        <div class="karte">
+          <h2>Datensicherung</h2>
+          <p class="hinweis">Exportiert Firmendaten und alle Mitarbeiter als JSON-Datei bzw. stellt sie wieder her.</p>
+          <div class="aktionen">
+            <button type="button" class="btn" id="backupExport">Sicherung exportieren</button>
+            <label class="btn sekundaer dateiknopf">Sicherung importieren<input type="file" id="backupImport" accept="application/json,.json" hidden></label>
+          </div>
+        </div>
       </div>
     </section>
   </main>
@@ -259,12 +314,53 @@
       <menu><button value="abbrechen" class="btn sekundaer">Abbrechen</button><button value="ok" class="btn">Speichern</button></menu>
     </form>
   </dialog>
+
+  <!-- ===== Mitarbeiter-Editor ===== -->
+  <section class="vollbild" id="maEditor" hidden aria-modal="true" role="dialog" aria-labelledby="maEditorTitel">
+    <header class="vollbild-kopf"><button type="button" class="zurueck" data-schliessen>‹ Zurück</button><h2 id="maEditorTitel">Mitarbeiter</h2><button type="button" class="btn-klein" id="maSpeichern">Speichern</button></header>
+    <form id="maForm" class="vollbild-inhalt" autocomplete="off" onsubmit="return false"></form>
+  </section>
+
+  <!-- ===== Entgeltabrechnung ===== -->
+  <section class="vollbild" id="lzAnsicht" hidden aria-modal="true" role="dialog" aria-labelledby="lzTitel">
+    <header class="vollbild-kopf"><button type="button" class="zurueck" data-schliessen>‹ Zurück</button><h2 id="lzTitel">Entgeltabrechnung</h2><span></span></header>
+    <div class="vollbild-inhalt">
+      <div class="karte lz-steuerung">
+        <div class="raster">
+          <label>Monat<select id="lzMonat"></select></label>
+          <label>Jahr<select id="lzJahr"><option>2026</option></select></label>
+        </div>
+        <h3>Einmalzahlungen in diesem Monat</h3>
+        <div id="lzEinmal"></div>
+        <div class="chips"><button type="button" data-ez="Weihnachtsgeld">+ Weihnachtsgeld</button><button type="button" data-ez="Urlaubsgeld">+ Urlaubsgeld</button><button type="button" data-ez="13. Monatsgehalt">+ 13. Gehalt</button><button type="button" data-ez="Prämie">+ Prämie</button></div>
+        <p class="hinweis" id="lzEinmalInfo"></p>
+        <label class="schalter"><input type="checkbox" id="lzVortragAn"> <span>Jahressummen der Vormonate manuell eingeben</span></label>
+        <div class="raster" id="lzVortrag" hidden></div>
+        <div class="aktionen">
+          <button type="button" class="btn" id="lzDrucken">Drucken</button>
+          <button type="button" class="btn" id="lzPdf">PDF speichern</button>
+          <button type="button" class="btn sekundaer" id="lzTeilen">Teilen / Versenden</button>
+        </div>
+        <p class="feldfehler" id="lzFehler"></p>
+      </div>
+      <div class="lz-vorschau" id="lzVorschau"></div>
+    </div>
+  </section>
+  <div id="druckbereich" aria-hidden="true"></div>
   <div class="toast" id="toast" role="status"></div>
+  <dialog id="dlgFrage"><form method="dialog"><h3 id="frageTitel"></h3><p id="frageText"></p><menu id="frageKnoepfe"></menu></form></dialog>
 
   <script src="js/decimal.js"></script>
   <script src="js/lohnsteuer2026.js"></script>
   <script src="js/rechner.js"></script>
   <script src="js/krankenkassen.js"></script>
+  <script src="js/eingabe.js"></script>
+  <script src="js/validierung.js"></script>
+  <script src="js/abrechnung.js"></script>
+  <script src="js/vendor/jspdf.umd.min.js"></script>
+  <script src="js/abrechnung-ausgabe.js"></script>
+  <script src="js/speicher.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/arbeitgeber.js"></script>
 </body>
 </html>

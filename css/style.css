@@ -94,3 +94,93 @@ dialog h3 { margin-top: 0; color: var(--navy); } dialog menu { display: flex; ga
   table.aufstellung { font-size: .8rem; } .aufstellung td, .aufstellung th { padding: 6px 2px; }
   .aufstellung tr.netto td { font-size: .88rem; }
 }
+
+/* ===== Arbeitgeberbereich ===== */
+.datenschutz { border-left: 5px solid var(--c-netto); }
+.datenschutz p { margin: 6px 0; font-size: .9rem; }
+.kopfzeile { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; }
+.kopfzeile .btn { flex: 0 0 auto; }
+.summary-info { font-weight: 500; color: var(--leise); font-size: .85rem; margin-left: auto; margin-right: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55%; }
+.maliste { list-style: none; margin: 0; padding: 0; }
+.maliste li { padding: 12px 0; border-bottom: 1px solid var(--linie); }
+.maliste .ma-kopf { display: flex; align-items: center; gap: 10px; }
+.maliste .avatar { width: 40px; height: 40px; border-radius: 50%; background: #eef2f7; color: var(--navy); display: grid; place-items: center; font-weight: 700; flex: 0 0 auto; }
+.maliste .ma-info { flex: 1; min-width: 0; }
+.maliste .ma-info strong { display: block; }
+.maliste .ma-info small { color: var(--leise); display: block; font-size: .8rem; }
+.maliste .ma-aktionen { display: flex; gap: 6px; margin-top: 8px; }
+.maliste .ma-aktionen .btn { padding: 8px 10px; font-size: .85rem; }
+.maliste .leer { color: var(--leise); font-size: .9rem; }
+.logozeile { display: flex; align-items: center; gap: 12px; }
+#logoVorschau { max-height: 48px; max-width: 160px; border: 1px solid var(--linie); border-radius: 6px; padding: 3px; background: #fff; }
+.dateiknopf { display: inline-flex; align-items: center; justify-content: center; color: var(--navy) !important; font-size: 1rem !important; cursor: pointer; }
+.feldfehler { color: #b23b3b; font-weight: 500; font-size: .78rem; min-height: 0; }
+.feldhinweis { color: #8a6d1d; font-weight: 500; font-size: .78rem; }
+input.ungueltig { border-color: #d0605e !important; background: #fdf3f3 !important; }
+input.gueltig { border-color: #7cc4a1 !important; }
+.vollbild { position: fixed; inset: 0; background: var(--hell); z-index: 40; display: flex; flex-direction: column; }
+.vollbild-kopf { display: flex; align-items: center; gap: 10px; padding: calc(10px + env(safe-area-inset-top)) 12px 10px; background: var(--navy); color: #fff; }
+.vollbild-kopf h2 { color: #fff; margin: 0; flex: 1; font-size: 1.05rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zurueck { background: none; border: 0; color: #fff; font: inherit; font-weight: 600; padding: 6px 4px; cursor: pointer; }
+.vollbild-inhalt { overflow-y: auto; padding: 12px; flex: 1; max-width: 900px; width: 100%; margin: 0 auto; -webkit-overflow-scrolling: touch; }
+.vollbild-inhalt h3 { color: var(--navy); font-size: .95rem; margin: 12px 0 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.chips button { border: 1px dashed var(--navy-2); background: #fff; color: var(--navy); border-radius: 999px; padding: 6px 10px; font: inherit; font-size: .82rem; cursor: pointer; }
+.ez-zeile { display: grid; grid-template-columns: 1fr 110px 36px; gap: 6px; margin-bottom: 6px; }
+.ez-zeile button { border: 0; background: #fbeaea; color: #b23b3b; border-radius: 9px; font-size: 1rem; cursor: pointer; }
+
+/* ===== Entgeltabrechnung (Vorschau + Druck) ===== */
+.lz-vorschau { overflow-x: auto; padding-bottom: 20px; }
+.lohnzettel { background: #fff; color: #111; width: 100%; max-width: 210mm; margin: 0 auto; padding: 14px; font-size: 11px; line-height: 1.35; box-shadow: 0 2px 12px rgba(0,0,0,.1); border-radius: 4px; font-variant-numeric: tabular-nums; }
+.lohnzettel h3 { font-size: 11.5px; color: var(--navy); margin: 12px 0 4px; }
+.lz-kopf { display: flex; justify-content: space-between; gap: 10px; }
+.lz-firma { font-size: 14px; }
+.lz-logo { max-height: 56px; max-width: 160px; object-fit: contain; }
+.lz-anschrift { display: grid; grid-template-columns: 1.3fr 1fr; gap: 12px; align-items: start; margin-top: 16px; }
+.lz-adresse { font-size: 12px; }
+.lz-stamm dd { text-align: right; }
+.lz-adresse small { color: #777; font-size: 8.5px; border-bottom: 1px solid #ccc; }
+.lz-stamm { display: grid; grid-template-columns: auto 1fr; gap: 1px 10px; margin: 0; }
+.lz-stamm dt, .lz-merkmale dt { color: #666; } .lz-stamm dd, .lz-merkmale dd { margin: 0; }
+.lz-titel { font-size: 17px; color: var(--navy); margin: 14px 0 0; }
+.lz-zeitraum { margin: 2px 0 8px; color: #555; }
+.lz-merkmale { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.lz-merkmale section { background: #f5f3ee; border-radius: 6px; padding: 6px 8px; }
+.lz-merkmale h3 { margin: 0 0 3px; }
+.lz-merkmale dl { display: grid; grid-template-columns: auto 1fr; gap: 1px 8px; margin: 0; }
+.lz-tab { width: 100%; border-collapse: collapse; }
+.lz-tab th { background: var(--navy); color: #fff; font-weight: 600; padding: 3px 5px; font-size: 10px; }
+.lz-tab td { padding: 3px 5px; border-bottom: 1px solid #e6e2d8; }
+.lz-tab .r { text-align: right; white-space: nowrap; } .lz-tab .c { text-align: center; } .lz-tab .l { text-align: left; }
+.lz-tab tr.summe td { font-weight: 700; border-bottom: 1.5px solid #bbb; }
+.lz-tab tr.zwischen td { font-weight: 700; }
+.lz-tab tr.netto td { font-weight: 800; background: #e6f4ec; }
+.lz-tab tr.info td { color: #666; font-size: 9.5px; }
+.lz-auszahlung { background: var(--navy); color: #fff; border-radius: 8px; padding: 8px 12px; margin-top: 12px; }
+.lz-auszahlung div { display: flex; justify-content: space-between; align-items: baseline; font-weight: 700; font-size: 13px; }
+.lz-auszahlung strong { font-size: 17px; }
+.lz-ag { color: #555; font-size: 9.5px; margin: 8px 0 0; }
+.lz-fuss { margin-top: 12px; padding-top: 6px; border-top: 1px solid #ddd; color: #666; font-size: 9px; }
+#druckbereich { display: none; }
+@media (max-width: 480px) { .lohnzettel { padding: 10px; font-size: 10px; } .lz-merkmale, .lz-anschrift { grid-template-columns: 1fr; } }
+
+@page { size: A4; margin: 12mm; }
+@media print {
+  body { background: #fff; }
+  body > *:not(#druckbereich) { display: none !important; }
+  #druckbereich { display: block !important; }
+  #druckbereich .lohnzettel { box-shadow: none; padding: 0; max-width: none; border-radius: 0; font-size: 8pt; line-height: 1.25; page-break-after: always; break-after: page; }
+  #druckbereich .lz-anschrift, #druckbereich .lz-merkmale { grid-template-columns: 1.3fr 1fr; }
+  #druckbereich .lz-merkmale { grid-template-columns: 1fr 1fr; }
+  #druckbereich .lohnzettel h3 { font-size: 8.5pt; margin: 7px 0 2px; }
+  #druckbereich .lz-titel { font-size: 13pt; margin-top: 10px; } #druckbereich .lz-firma { font-size: 11pt; }
+  #druckbereich .lz-tab th { font-size: 7.5pt; padding: 1.5px 4px; } #druckbereich .lz-tab td { padding: 1.5px 4px; }
+  #druckbereich .lz-tab tr.info td { font-size: 7pt; } #druckbereich .lz-adresse { font-size: 9.5pt; }
+  #druckbereich .lz-auszahlung { margin-top: 8px; padding: 6px 10px; } #druckbereich .lz-auszahlung strong { font-size: 13pt; }
+  #druckbereich .lz-fuss, #druckbereich .lz-ag { font-size: 7pt; }
+  #druckbereich .lohnzettel:last-child { page-break-after: auto; break-after: auto; }
+  .lz-tab th, .lz-auszahlung, .lz-tab tr.netto td, .lz-merkmale section { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .lz-tab tr { break-inside: avoid; }
+}
+.mitknopf { display: flex; gap: 6px; } .mitknopf .btn { flex: 0 0 auto; padding: 8px 10px; font-size: .82rem; }
+.feldfehler.hinweis { color: var(--leise); }

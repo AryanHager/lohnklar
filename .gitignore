@@ -1,0 +1,7 @@
+# Beispiel-Artefakte mit (fiktiven) Personendaten nicht ins Repository
+beispiel-*.png
+beispiel-*.pdf
+beispiel-*.json
+*.pdf
+Lohnklar-Sicherung_*.json
+node_modules/

@@ -1,6 +1,7 @@
 /* Service Worker: Cache-first, vollständige Offline-Nutzung. Keine externen Anfragen. */
-const CACHE = 'lohnklar-v4';
-const DATEIEN = ['./', './index.html', './css/style.css', './js/decimal.js', './js/lohnsteuer2026.js', './js/rechner.js', './js/krankenkassen.js', './js/app.js',
+const CACHE = 'lohnklar-v5';
+const DATEIEN = ['./', './index.html', './css/style.css', './js/decimal.js', './js/lohnsteuer2026.js', './js/rechner.js', './js/krankenkassen.js', './js/eingabe.js', './js/validierung.js', './js/abrechnung.js', './js/vendor/jspdf.umd.min.js',
+  './js/abrechnung-ausgabe.js', './js/speicher.js', './js/app.js', './js/arbeitgeber.js',
   './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(DATEIEN)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== CACHE).map(x => caches.delete(x)))).then(() => self.clients.claim())); });
